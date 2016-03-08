@@ -238,9 +238,9 @@ resources:
       name:
         str_replace:
           params:
-            stack:
-              get_param: 'OS::stack_name'
-          template: stack_Load_Balancer
+            domain:
+              get_param: 'magento_url'
+          template: lb01.domain
       algorithm: ROUND_ROBIN
       virtualIps:
         - ipVersion: IPV4
