@@ -239,8 +239,8 @@ resources:
         str_replace:
           params:
             domain:
-              get_param: 'magento_url'
-          template: lb01.domain
+              get_param: magento_url
+          template: 'lb01.domain'
       algorithm: ROUND_ROBIN
       virtualIps:
         - ipVersion: IPV4
@@ -559,7 +559,11 @@ resources:
     properties:
       user_data_format: SOFTWARE_CONFIG
       name:
-        get_param: 'OS::stack_name'
+        str_replace:
+          params:
+            domain:
+              get_param: magento_url
+          template: 'master.domain'
       key_name:
         get_resource: ssh_key
       image:
