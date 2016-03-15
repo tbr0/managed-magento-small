@@ -563,7 +563,7 @@ resources:
           params:
             domain:
               get_param: magento_url
-          template: 'master.domain'
+          template: 'web%index%.domain'
       key_name:
         get_resource: ssh_key
       image:
