@@ -644,9 +644,9 @@ resources:
           server_name:
             str_replace:
               params:
-                stack:
-                  get_param: 'OS::stack_name'
-              template: 'stack-secondary-%index%'
+                domain:
+                  get_param: magento_url
+              template: 'web%index%.domain'
           ansible_repo:
             get_param: ansible_repo
           ssh_key:
