@@ -563,7 +563,7 @@ resources:
           params:
             domain:
               get_param: magento_url
-          template: 'web%index%.domain'
+          template: 'master.domain'
       key_name:
         get_resource: ssh_key
       image:
@@ -646,7 +646,7 @@ resources:
               params:
                 domain:
                   get_param: magento_url
-              template: 'web%index%.domain'
+              template: 'web0%index%.domain'
           ansible_repo:
             get_param: ansible_repo
           ssh_key:
