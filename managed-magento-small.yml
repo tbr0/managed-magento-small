@@ -73,7 +73,7 @@ parameters:
     description: E-Mail for Magento admin
     label: Magento Admin E-Mail
   ansible_repo:
-    default: 'https://github.com/rillip3/lamp'
+    default: 'https://github.com/tbr0/ansible-managed-lamp'
     type: string
     description: 'The Ansible Roles will be pulled from Git, using the repo provided'
     label: Git Repo for Ansible Roles
@@ -432,7 +432,7 @@ resources:
             set -e
 
             git clone -b 'tag' --single-branch --progress repository
-            /etc/ansible/roles > $heat_outputs_path.results 2>&1
+            /etc/ansible > $heat_outputs_path.results 2>&1
       group: script
   ssh_key:
     type: 'OS::Nova::KeyPair'
@@ -581,12 +581,53 @@ resources:
     properties:
       group: ansible
       config: |
-        ---
-        - name: Install and configure Managed LAMP
-          hosts: localhost
-          connection: local
-          roles:
-          - lamp
+      ---
+      - hosts: all
+        user: root
+      
+        tasks:
+          - group_by: key={{ ansible_os_family }}
+            tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
+      
+      
+      ### Applies only to RedHat systems
+      
+      - hosts: RedHat
+        user: root
+        gather_facts: false
+      
+        pre_tasks:
+          - include_vars: group_vars/RHEL_7.yml
+            when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+            tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
+      
+        roles:
+          - { role: IUS-repos, tags: [ ius-repos, apache2, php5, mysql ] }
+          - { role: apache2, tags: apache2 }
+          - { role: php5, tags: php5 }
+          - { role: mysql, tags: mysql }
+          - { role: phpmyadmin, tags: phpmyadmin }
+          - { role: holland, tags: holland }
+      
+      
+      ### Applies only to Debian systems
+      
+      - hosts: Debian
+        user: root
+        gather_facts: false
+      
+      
+        pre_tasks:
+          - include_vars: group_vars/Ubuntu_14.yml
+            when: ansible_os_family == 'Debian' and (ansible_distribution_version == '14.04' or ansible_distribution_version == '8')
+            tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
+      
+        roles:
+          - { role: apache2, tags: apache2 }
+          - { role: php5, tags: php5 }
+          - { role: mysql, tags: mysql }
+          - { role: phpmyadmin, tags: phpmyadmin }
+          - { role: holland, tags: holland }
   load_balancer_http_check:
     depends_on: load_balancer
     type: 'Rackspace::CloudMonitoring::Check'
