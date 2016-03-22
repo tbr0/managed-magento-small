@@ -122,7 +122,7 @@ parameters:
           - Fresh install of the latest Magento CE 1.9.x release (including sample data)
           - "Don't install Magento. I will upload an existing Magento site (see instructions)"
   ansible_branch:
-    default: stable
+    default: master
     type: string
     description: 'The Ansible Roles will be pulled from Git, using the tag or branch provided'
     label: Git Branch or Tag for Ansible Roles
