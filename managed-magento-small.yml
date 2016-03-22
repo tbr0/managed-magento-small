@@ -73,7 +73,7 @@ parameters:
     description: E-Mail for Magento admin
     label: Magento Admin E-Mail
   ansible_repo:
-    default: 'https://github.com/rackspace-orchestration-templates/ansible-roles.git'
+    default: 'https://github.com/rillip3/lamp'
     type: string
     description: 'The Ansible Roles will be pulled from Git, using the repo provided'
     label: Git Repo for Ansible Roles
@@ -563,7 +563,7 @@ resources:
           params:
             domain:
               get_param: magento_url
-          template: 'webmaster.domain'
+          template: 'master.domain'
       key_name:
         get_resource: ssh_key
       image:
@@ -582,17 +582,11 @@ resources:
       group: ansible
       config: |
         ---
-        - name: Install and configure Magento
+        - name: Install and configure Managed LAMP
           hosts: localhost
           connection: local
           roles:
-          - common
-          - nginx
-          - holland
-          - redis
-          - memcache
-          - php-fpm
-          - magento-ce
+          - lamp
   load_balancer_http_check:
     depends_on: load_balancer
     type: 'Rackspace::CloudMonitoring::Check'
@@ -646,7 +640,7 @@ resources:
               params:
                 domain:
                   get_param: magento_url
-              template: 'web0%index%.domain'
+              template: 'slave%index%.domain'
           ansible_repo:
             get_param: ansible_repo
           ssh_key:
