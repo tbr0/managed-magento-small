@@ -191,7 +191,7 @@ secondary_ips:
       get_attr:
         - magento_secondary
         - public_ip
-  magento_public_url:
+magento_public_url:
     description: Magento Public URL
     value:
       str_replace:
