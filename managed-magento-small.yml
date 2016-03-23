@@ -124,16 +124,16 @@ parameters:
 #    type: string
 #    description: 'The Ansible Roles will be pulled from Git, using the tag or branch provided'
 #    label: Git Branch or Tag for Ansible Roles
-#  magento_eula:
-#    label: Agree to Terms?
-#    type: boolean
-#    description: You must agree to the terms of the Magento Community Edition License
-#    constraints:
-#      - description: |
-#          You must agree to the Magento Community Edition License
-#          which can be found here: http://opensource.org/licenses/osl-3.0.php
-#        allowed_values:
-#          - true
+  magento_eula:
+    label: Agree to Terms?
+    type: boolean
+    description: You must agree to the terms of the Magento Community Edition License
+    constraints:
+      - description: |
+          You must agree to the Magento Community Edition License
+          which can be found here: http://opensource.org/licenses/osl-3.0.php
+        allowed_values:
+          - true
 #  magento_user:
 #    default: admin
 #    label: Magento Admin Username
