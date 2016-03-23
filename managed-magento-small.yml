@@ -15,6 +15,8 @@ parameter_groups:
     label: rax-dev-params
 heat_template_version: '2015-10-15'
 description: >
+
+  # Comment block is needed?
   This stack is intended for low to medium traffic production websites and can be
   scaled as needed to accommodate future growth.
 
@@ -61,11 +63,11 @@ parameters:
     type: number
     description: Size of the Magento Cloud Database volume in GB
     label: Database Disk (in GB) - 64GB Instance
-#  secondary_template:
-#    default: 'https://raw.githubusercontent.com/rackspace-orchestration-templates/magento-small/stable/magento_small_secondary.yaml'
-#    type: string
-#    description: Template to use for secondary servers
-#    label: Secondary Template
+  secondary_template:
+    default: 'https://raw.githubusercontent.com/rackspace-orchestration-templates/magento-small/stable/magento_small_secondary.yaml'
+    type: string
+    description: Template to use for secondary servers
+    label: Secondary Template
 #  magento_lname:
 #    default: User
 #    type: string
