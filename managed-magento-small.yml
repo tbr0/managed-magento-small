@@ -98,14 +98,14 @@ parameters:
 #    type: string
 #    description: First name for Magento admin
 #    label: Magento Admin First Name
-#  magento_url:
-#    default: example.com
-#    label: Site Domain
-#    type: string
-#    description: Domain to use with Magento Site
-#    constraints:
-#      - allowed_pattern: '^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$'
-#        description: Must be a valid domain name
+  magento_url:
+    default: example.com
+    label: Site Domain
+    type: string
+    description: Domain to use with Magento Site
+    constraints:
+      - allowed_pattern: '^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$'
+        description: Must be a valid domain name
 #  magento_install:
 #    default: Fresh install of the latest Magento CE 1.9.x release
 #    label: How should Magento be deployed?
