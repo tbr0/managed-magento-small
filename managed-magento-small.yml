@@ -52,7 +52,7 @@ parameters:
           - 8GB Instance
           - 16GB Instance
           - 32GB Instance
-   database_disk:
+  database_disk:
     default: 10
     constraints:
       - range:
