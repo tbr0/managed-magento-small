@@ -185,13 +185,13 @@ outputs:
       get_attr:
         - ssh_pass
         - value
-secondary_ips:
+  secondary_ips:
     description: Secondary Node IPs
     value:
       get_attr:
         - magento_secondary
         - public_ip
-magento_public_url:
+  magento_public_url:
     description: Magento Public URL
     value:
       str_replace:
