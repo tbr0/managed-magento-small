@@ -60,8 +60,7 @@ parameters:
           min: 10
     type: number
     description: Size of the Magento Cloud Database volume in GB
-    label: Database Disk (in GB)         - 64GB Instance
-
+    label: Database Disk (in GB) - 64GB Instance
 #  secondary_template:
 #    default: 'https://raw.githubusercontent.com/rackspace-orchestration-templates/magento-small/stable/magento_small_secondary.yaml'
 #    type: string
