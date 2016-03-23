@@ -5,7 +5,7 @@ parameter_groups:
 #      - magento_email
 #      - magento_fname
 #      - magento_lname
-#      - magento_eula
+      - magento_eula
     label: Magento Settings
   - parameters:
       - server_image
