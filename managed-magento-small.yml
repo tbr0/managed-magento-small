@@ -584,6 +584,7 @@ resources:
         ---
         - hosts: all
           user: root
+          connection: local
           tasks:
             - group_by: key={{ ansible_os_family }}
               tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
