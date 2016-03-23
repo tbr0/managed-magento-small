@@ -81,7 +81,6 @@ parameters:
 #    type: string
 #    description: 'The Ansible Roles will be pulled from Git, using the repo provided'
 #    label: Git Repo for Ansible Roles
-
   server_flavor:
     default: 4 GB General Purpose v1
     label: Flavor for Magento Server
@@ -92,7 +91,6 @@ parameters:
           - 2 GB General Purpose v1
           - 4 GB General Purpose v1
           - 8 GB General Purpose v1
-
 #  magento_fname:
 #    default: Joe
 #    type: string
