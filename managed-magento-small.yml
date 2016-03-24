@@ -298,7 +298,6 @@ resources:
         get_param: database_disk
   holland_pass:
     type: 'OS::Heat::RandomString'
-  magento_db_user: magento
 #  deploy_magento:
 #    depends_on: deploy_roles
 #    type: 'OS::Heat::SoftwareDeployment'
