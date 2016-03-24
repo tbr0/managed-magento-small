@@ -298,9 +298,7 @@ resources:
         get_param: database_disk
   holland_pass:
     type: 'OS::Heat::RandomString'
-  mysql_host: {get_attr: [magento_database, hostname] }
   magento_db_user: magento
-  magento_db_password: {get_attr: [database_pass, value] }
 #  deploy_magento:
 #    depends_on: deploy_roles
 #    type: 'OS::Heat::SoftwareDeployment'
@@ -547,12 +545,11 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
-            bash /tmp/lamp/inventory/magento.sh $magento_url $db_host magento $magento_db_user $magento_db_password > /tmp/magento.sh.log
+            bash /tmp/lamp/inventory/magento.sh $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log
           params:
             $magento_url: {get_param: magento_url}
-            $db_host: {get_param: mysql_host}
-            $magento_db_user: {get_param: magento_db_user}
-            $magento_db_password: {get_param: magento_db_password}
+            $db_host: {get_attr: [magento_database, hostname] }
+            $magento_db_password: {get_attr: [database_pass, value] }
       name:
         str_replace:
           params:
