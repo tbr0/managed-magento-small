@@ -24,13 +24,7 @@ description: >
 
   It also includes Cloud Monitoring and Cloud Backups.
 
-
-
   This stack is running:
-
-  - [NGINX](http://nginx.org/en/)
-
-  - [PHP FPM](http://php-fpm.org/about/)
 
   - [Redis](http://redis.io/)
 
@@ -38,9 +32,6 @@ description: >
 
   - The latest [Magento 1.9.x Community
   Edition](http://www.magentocommerce.com/product/community-edition/),
-
-   - With the option, and full instructions, for uploading an existing Magento
-  site.
 
 parameters:
   database_flavor:
@@ -274,39 +265,42 @@ resources:
 #        get_resource: upload_role_config
 #      server:
 #        get_resource: magento_server
-#  magento_database:
-#    type: 'OS::Trove::Instance'
-#    properties:
-#      users:
-#        - password:
-#            get_attr:
-#              - database_pass
-#              - value
-#          name: magento
-#          databases:
-#            - magento
-#        - password:
-#            get_attr:
-#              - holland_pass
-#              - value
-#          name: holland
-#          databases:
-#            - magento
-#      name:
-#        str_replace:
-#          params:
-#            domain:
-#              get_param: magento_url
-#          template: db01.domain
-#      databases:
-#        - name: magento
-#      datastore_type: mysql
-#      flavor:
-#        get_param: database_flavor
-#      size:
-#        get_param: database_disk
+  magento_database:
+    type: 'OS::Trove::Instance'
+    properties:
+      users:
+        - password:
+            get_attr:
+              - database_pass
+              - value
+          name: magento
+          databases:
+            - magento
+        - password:
+            get_attr:
+              - holland_pass
+              - value
+          name: holland
+          databases:
+            - magento
+      name:
+        str_replace:
+          params:
+            domain:
+              get_param: magento_url
+          template: db01.domain
+      databases:
+        - name: magento
+      datastore_type: mysql
+      flavor:
+        get_param: database_flavor
+      size:
+        get_param: database_disk
   holland_pass:
     type: 'OS::Heat::RandomString'
+  mysql_host: {get_attr: [magento_database, hostname] }
+  magento_db_user: magento
+  magento_db_password: {get_attr: [database_pass, value] }
 #  deploy_magento:
 #    depends_on: deploy_roles
 #    type: 'OS::Heat::SoftwareDeployment'
@@ -553,9 +547,12 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
-            bash /tmp/lamp/inventory/magento.sh $magento_url > /tmp/magento.sh.log
+            bash /tmp/lamp/inventory/magento.sh $magento_url $db_host magento $magento_db_user $magento_db_password > /tmp/magento.sh.log
           params:
             $magento_url: {get_param: magento_url}
+            $db_host: {get_param: mysql_host}
+            $magento_db_user: {get_param: magento_db_user}
+            $magento_db_password: {get_param: magento_db_password}
       name:
         str_replace:
           params:
