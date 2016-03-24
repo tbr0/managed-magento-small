@@ -2,7 +2,7 @@ parameter_groups:
   - parameters:
       - magento_url
 #      - magento_user
-#      - magento_email
+      - magento_email
 #      - magento_fname
 #      - magento_lname
       - magento_eula
@@ -16,7 +16,6 @@ parameter_groups:
 heat_template_version: '2015-10-15'
 description: >
 
-  # Comment block is needed?
   This stack is intended for low to medium traffic production websites and can be
   scaled as needed to accommodate future growth.
 
@@ -42,6 +41,7 @@ description: >
 
    - With the option, and full instructions, for uploading an existing Magento
   site.
+
 parameters:
   database_flavor:
     default: 4GB Instance
@@ -73,18 +73,18 @@ parameters:
 #    type: string
 #    description: Last name for Magento admin
 #    label: Magento Admin Last Name
-#  magento_email:
-#    default: admin@example.com
-#    type: string
-#    description: E-Mail for Magento admin
-#    label: Magento Admin E-Mail
+  magento_email:
+    default: admin@example.com
+    type: string
+    description: E-Mail for Magento admin
+    label: Magento Admin E-Mail
 #  ansible_repo:
 #    default: 'https://github.com/tbr0/ansible-managed-lamp'
 #    type: string
 #    description: 'The Ansible Roles will be pulled from Git, using the repo provided'
 #    label: Git Repo for Ansible Roles
   server_flavor:
-    default: 4 GB General Purpose v1
+    default: 2 GB General Purpose v1
     label: Flavor for Magento Server
     type: string
     description: Flavor of Cloud Server to use for Magento
@@ -149,7 +149,7 @@ parameters:
     description: Number of secondary servers to create.  These will be synchronized from the primary node
     constraints:
       - range:
-          max: 0
+          max: 1
           min: 0
   server_image:
     default: d77b62e4-5f79-4e03-8dc1-925472901f6d
@@ -219,92 +219,92 @@ outputs:
 #    description: Magento Admin User
 #    value:
 #      get_param: magento_user
-  magento_public_ip:
-    description: Load Balancer IP
-    value:
-      get_attr:
-        - load_balancer
-        - PublicIp
+#  magento_public_ip:
+#    description: Load Balancer IP
+#    value:
+#      get_attr:
+#        - load_balancer
+#        - PublicIp
 resources:
   database_pass:
     type: 'OS::Heat::RandomString'
-  load_balancer:
-    depends_on:
-      - deploy_magento
-      - magento_secondary
-    type: 'Rackspace::Cloud::LoadBalancer'
-    properties:
-      protocol: HTTP
-      name:
-        str_replace:
-          params:
-            domain:
-              get_param: magento_url
-          template: 'lb01.domain'
-      algorithm: ROUND_ROBIN
-      virtualIps:
-        - ipVersion: IPV4
-          type: PUBLIC
-      contentCaching: ENABLED
-      timeout: 120
-      nodes:
-        - addresses:
-            - get_attr:
-                - magento_server
-                - networks
-                - private
-                - 0
-          condition: ENABLED
-          port: 80
-        - addresses:
-            get_attr:
-              - magento_secondary
-              - private_ip
-          condition: ENABLED
-          port: 80
-      port: 80
-      metadata:
-        rax-heat:
-          get_param: 'OS::stack_id'
-  deploy_roles:
-    type: 'OS::Heat::SoftwareDeployment'
-    properties:
-      signal_transport: TEMP_URL_SIGNAL
-      config:
-        get_resource: upload_role_config
-      server:
-        get_resource: magento_server
-  magento_database:
-    type: 'OS::Trove::Instance'
-    properties:
-      users:
-        - password:
-            get_attr:
-              - database_pass
-              - value
-          name: magento
-          databases:
-            - magento
-        - password:
-            get_attr:
-              - holland_pass
-              - value
-          name: holland
-          databases:
-            - magento
-      name:
-        str_replace:
-          params:
-            domain:
-              get_param: mangento_url
-          template: db01.domain
-      databases:
-        - name: magento
-      datastore_type: mysql
-      flavor:
-        get_param: database_flavor
-      size:
-        get_param: database_disk
+#  load_balancer:
+#    depends_on:
+#      - deploy_magento
+#      - magento_secondary
+#    type: 'Rackspace::Cloud::LoadBalancer'
+#    properties:
+#      protocol: HTTP
+#      name:
+#        str_replace:
+#          params:
+#            domain:
+#              get_param: magento_url
+#          template: 'lb01.domain'
+#      algorithm: ROUND_ROBIN
+#      virtualIps:
+#        - ipVersion: IPV4
+#          type: PUBLIC
+#      contentCaching: ENABLED
+#      timeout: 120
+#      nodes:
+#        - addresses:
+#            - get_attr:
+#                - magento_server
+#                - networks
+#                - private
+#                - 0
+#          condition: ENABLED
+#          port: 80
+#        - addresses:
+#            get_attr:
+#              - magento_secondary
+#              - private_ip
+#          condition: ENABLED
+#          port: 80
+#      port: 80
+#      metadata:
+#        rax-heat:
+#          get_param: 'OS::stack_id'
+#  deploy_roles:
+#    type: 'OS::Heat::SoftwareDeployment'
+#    properties:
+#      signal_transport: TEMP_URL_SIGNAL
+#      config:
+#        get_resource: upload_role_config
+#      server:
+#        get_resource: magento_server
+#  magento_database:
+#    type: 'OS::Trove::Instance'
+#    properties:
+#      users:
+#        - password:
+#            get_attr:
+#              - database_pass
+#              - value
+#          name: magento
+#          databases:
+#            - magento
+#        - password:
+#            get_attr:
+#              - holland_pass
+#              - value
+#          name: holland
+#          databases:
+#            - magento
+#      name:
+#        str_replace:
+#          params:
+#            domain:
+#              get_param: magento_url
+#          template: db01.domain
+#      databases:
+#        - name: magento
+#      datastore_type: mysql
+#      flavor:
+#        get_param: database_flavor
+#      size:
+#        get_param: database_disk
   holland_pass:
     type: 'OS::Heat::RandomString'
 #  deploy_magento:
@@ -414,17 +414,17 @@ resources:
 #          - lsync
 #          - firewall
 #      group: ansible
-  upload_role_config:
-    type: 'OS::Heat::SoftwareConfig'
-    properties:
-      outputs:
-        - name: results
-      config:
-        template: >
-          #!/bin/bash
-          set -e
-          curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp.sh" | bash
-      group: script
+#  upload_role_config:
+#    type: 'OS::Heat::SoftwareConfig'
+#    properties:
+#      group: script
+#      outputs:
+#      - name: result
+#      config: |
+#          #!/bin/sh -x
+#          #set -e
+#          #curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp.sh" | bash > $heat_outputs_path.result
+#          echo "test-https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp.sh" > $heat_outputs_path.result
   ssh_key:
     type: 'OS::Nova::KeyPair'
     properties:
@@ -435,120 +435,127 @@ resources:
     type: 'OS::Heat::RandomString'
   magento_pass:
     type: 'OS::Heat::RandomString'
-  magento_backup:
-    depends_on: magento_server
-    type: 'Rackspace::Cloud::BackupConfig'
-    properties:
-      TimeZoneId: Central Standard Time
-      StartTimeMinute: 0
-      HourInterval: null
-      server:
-        get_resource: magento_server
-      StartTimeHour: 1
-      StartTimeAmPm: AM
-      BackupConfigurationName:
-        str_replace:
-          params:
-            stack:
-              get_param: 'OS::stack_name'
-          template: stack Weekly Backup
-      Inclusions:
-        - FileItemType: Folder
-          FilePath: /var/spool/holland
-        - FileItemType: Folder
-          FilePath: /var/www/
-      NotifyFailure: true
-      NotifyRecipients:
-        get_param: magento_email
-      DayOfWeekId: 0
-      VersionRetention: 30
-      Frequency: Weekly
-  deploy_other:
-    depends_on: deploy_magento
-    type: 'OS::Heat::SoftwareDeployment'
-    properties:
-      input_values:
-        lsync_private_key:
-          get_attr:
-            - ssh_key
-            - private_key
-        firewall_global_rules:
-          - '0.0.0.0,0,22,tcp'
-          - '0.0.0.0,0,80,tcp'
-          - '0.0.0.0,0,443,tcp'
-        lsync_dirs:
-          - /var/www/vhosts
-        lsync_exclude:
-          - str_replace:
-              params:
-                domain:
-                  get_param: magento_url
-              template: /var/www/vhosts/domain/httpdocs/var/log/
-          - str_replace:
-              params:
-                domain:
-                  get_param: magento_url
-              template: /var/www/vhosts/domain/httpdocs/var/cache/
-        firewall_nodes:
-          get_attr:
-            - magento_secondary
-            - private_ip
-        firewall_node_rules:
-          - '32,6379,tcp'
-          - '32,6380,tcp'
-          - '32,6381,tcp'
-        lsync_servers:
-          get_attr:
-            - magento_secondary
-            - private_ip
-      signal_transport: TEMP_URL_SIGNAL
-      config:
-        get_resource: other_config
-      server:
-        get_resource: magento_server
-  magento_server_http_check:
-    depends_on: deploy_magento
-    type: 'Rackspace::CloudMonitoring::Check'
-    properties:
-      period: 120
-      label:
-        str_replace:
-          params:
-            stack:
-              get_param: 'OS::stack_name'
-          template: stack Master HTTP Check
-      target_hostname:
-        get_attr:
-          - magento_server
-          - accessIPv4
-      details:
-        url:
-          str_replace:
-            params:
-              ipaddr:
-                get_attr:
-                  - magento_server
-                  - accessIPv4
-            template: 'http://ipaddr'
-      timeout: 10
-      monitoring_zones_poll:
-        - Northern Virginia (IAD)
-        - Chicago (ORD)
-        - Dallas Fort Worth (DFW)
-        - London (LON)
-      target_receiver: IPv4
-      entity:
-        get_resource: magento_server
-      type: remote.http
-      metadata:
-        rax-heat:
-          get_param: 'OS::stack_id'
-        stack-name:
-          get_param: 'OS::stack_name'
+#  magento_backup:
+#    depends_on: magento_server
+#    type: 'Rackspace::Cloud::BackupConfig'
+#    properties:
+#      TimeZoneId: Central Standard Time
+#      StartTimeMinute: 0
+#      HourInterval: null
+#      server:
+#        get_resource: magento_server
+#      StartTimeHour: 1
+#      StartTimeAmPm: AM
+#      BackupConfigurationName:
+#        str_replace:
+#          params:
+#            stack:
+#              get_param: 'OS::stack_name'
+#          template: stack Weekly Backup
+#      Inclusions:
+#        - FileItemType: Folder
+#          FilePath: /var/spool/holland
+#        - FileItemType: Folder
+#          FilePath: /var/www/
+#      NotifyFailure: true
+#      NotifyRecipients:
+#        get_param: magento_email
+#      DayOfWeekId: 0
+#      VersionRetention: 30
+#      Frequency: Weekly
+#  deploy_other:
+#    depends_on: deploy_magento
+#    type: 'OS::Heat::SoftwareDeployment'
+#    properties:
+#      input_values:
+#        lsync_private_key:
+#          get_attr:
+#            - ssh_key
+#            - private_key
+#        firewall_global_rules:
+#          - '0.0.0.0,0,22,tcp'
+#          - '0.0.0.0,0,80,tcp'
+#          - '0.0.0.0,0,443,tcp'
+#        lsync_dirs:
+#          - /var/www/vhosts
+#        lsync_exclude:
+#          - str_replace:
+#              params:
+#                domain:
+#                  get_param: magento_url
+#              template: /var/www/vhosts/domain/httpdocs/var/log/
+#          - str_replace:
+#              params:
+#                domain:
+#                  get_param: magento_url
+#              template: /var/www/vhosts/domain/httpdocs/var/cache/
+#        firewall_nodes:
+#          get_attr:
+#            - magento_secondary
+#            - private_ip
+#        firewall_node_rules:
+#          - '32,6379,tcp'
+#          - '32,6380,tcp'
+#          - '32,6381,tcp'
+#        lsync_servers:
+#          get_attr:
+#            - magento_secondary
+#            - private_ip
+#      signal_transport: TEMP_URL_SIGNAL
+#      config:
+#        get_resource: other_config
+#      server:
+#        get_resource: magento_server
+#  magento_server_http_check:
+#    depends_on: deploy_magento
+#    type: 'Rackspace::CloudMonitoring::Check'
+#    properties:
+#      period: 120
+#      label:
+#        str_replace:
+#          params:
+#            stack:
+#              get_param: 'OS::stack_name'
+#          template: stack Master HTTP Check
+#      target_hostname:
+#        get_attr:
+#          - magento_server
+#          - accessIPv4
+#      details:
+#        url:
+#          str_replace:
+#            params:
+#              ipaddr:
+#                get_attr:
+#                  - magento_server
+#                  - accessIPv4
+#            template: 'http://ipaddr'
+#      timeout: 10
+#      monitoring_zones_poll:
+#        - Northern Virginia (IAD)
+#        - Chicago (ORD)
+#        - Dallas Fort Worth (DFW)
+#        - London (LON)
+#      target_receiver: IPv4
+#      entity:
+#        get_resource: magento_server
+#      type: remote.http
+#      metadata:
+#        rax-heat:
+#          get_param: 'OS::stack_id'
+#        stack-name:
+#          get_param: 'OS::stack_name'
   magento_server:
     type: 'OS::Nova::Server'
     properties:
-      user_data_format: SOFTWARE_CONFIG
+      user_data: 
+        str_replace:
+          template: |
+            #!/bin/bash
+            curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
+            bash /tmp/lamp/inventory/magento.sh $magento_url > /tmp/magento.sh.log
+          params:
+            $magento_url: {get_param: magento_url}
       name:
         str_replace:
           params:
@@ -566,87 +573,87 @@ resources:
       metadata:
         rax-heat:
           get_param: 'OS::stack_id'
-        build_config: 'backup_agent_only,monitoring_defaults'
-  magento_config:
-    type: 'OS::Heat::SoftwareConfig'
-    properties:
-      group: ansible
-      config: |
-        ---
-        - hosts: all
-          user: root
-          connection: local
-          tasks:
-            - group_by: key={{ ansible_os_family }}
-              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
-        ### Applies only to RedHat systems
-        - hosts: RedHat
-          user: root
-          gather_facts: false
-          pre_tasks:
-            - include_vars: group_vars/RHEL_7.yml
-              when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
-              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
-          roles:
-            - { role: IUS-repos, tags: [ ius-repos, apache2, php5, mysql ] }
-            - { role: apache2, tags: apache2 }
-            - { role: php5, tags: php5 }
-            - { role: mysql, tags: mysql }
-            - { role: phpmyadmin, tags: phpmyadmin }
-            - { role: holland, tags: holland }
-        ### Applies only to Debian systems
-        - hosts: Debian
-          user: root
-          gather_facts: false
-          pre_tasks:
-            - include_vars: group_vars/Ubuntu_14.yml
-              when: ansible_os_family == 'Debian' and (ansible_distribution_version == '14.04' or ansible_distribution_version == '8')
-              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
-          roles:
-            - { role: apache2, tags: apache2 }
-            - { role: php5, tags: php5 }
-            - { role: mysql, tags: mysql }
-            - { role: phpmyadmin, tags: phpmyadmin }
-            - { role: holland, tags: holland }
-  load_balancer_http_check:
-    depends_on: load_balancer
-    type: 'Rackspace::CloudMonitoring::Check'
-    properties:
-      period: 120
-      label:
-        str_replace:
-          params:
-            stack:
-              get_param: 'OS::stack_name'
-          template: stack Load Balancer HTTP Check
-      target_hostname:
-        get_attr:
-          - load_balancer
-          - PublicIp
-      details:
-        url:
-          str_replace:
-            params:
-              ipaddr:
-                get_attr:
-                  - load_balancer
-                  - PublicIp
-            template: 'http://ipaddr'
-      timeout: 10
-      monitoring_zones_poll:
-        - Northern Virginia (IAD)
-        - Chicago (ORD)
-        - Dallas Fort Worth (DFW)
-        - London (LON)
-      target_receiver: IPv4
-      entity:
-        get_resource: magento_server
-      type: remote.http
-      metadata:
-        rax-heat:
-          get_param: 'OS::stack_id'
-        stack-name:
-          get_param: 'OS::stack_name'
+        build_config: 'base_mgdops_config'
+#  magento_config:
+#    type: 'OS::Heat::SoftwareConfig'
+#    properties:
+#      group: ansible
+#      config: |
+#        ---
+#        - hosts: all
+#          user: root
+#          connection: local
+#          tasks:
+#            - group_by: key={{ ansible_os_family }}
+#              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
+#        ### Applies only to RedHat systems
+#        - hosts: RedHat
+#          user: root
+#          gather_facts: false
+#          pre_tasks:
+#            - include_vars: group_vars/RHEL_7.yml
+#              when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+#              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
+#          roles:
+#            - { role: IUS-repos, tags: [ ius-repos, apache2, php5, mysql ] }
+#            - { role: apache2, tags: apache2 }
+#            - { role: php5, tags: php5 }
+#            - { role: mysql, tags: mysql }
+#            - { role: phpmyadmin, tags: phpmyadmin }
+#            - { role: holland, tags: holland }
+#        ### Applies only to Debian systems
+#        - hosts: Debian
+#          user: root
+#          gather_facts: false
+#          pre_tasks:
+#            - include_vars: group_vars/Ubuntu_14.yml
+#              when: ansible_os_family == 'Debian' and (ansible_distribution_version == '14.04' or ansible_distribution_version == '8')
+#              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
+#          roles:
+#            - { role: apache2, tags: apache2 }
+#            - { role: php5, tags: php5 }
+#            - { role: mysql, tags: mysql }
+#            - { role: phpmyadmin, tags: phpmyadmin }
+#            - { role: holland, tags: holland }
+#  load_balancer_http_check:
+#    depends_on: load_balancer
+#    type: 'Rackspace::CloudMonitoring::Check'
+#    properties:
+#      period: 120
+#      label:
+#        str_replace:
+#          params:
+#            stack:
+#              get_param: 'OS::stack_name'
+#          template: stack Load Balancer HTTP Check
+#      target_hostname:
+#        get_attr:
+#          - load_balancer
+#          - PublicIp
+#      details:
+#        url:
+#          str_replace:
+#            params:
+#              ipaddr:
+#                get_attr:
+#                  - load_balancer
+#                  - PublicIp
+#            template: 'http://ipaddr'
+#      timeout: 10
+#      monitoring_zones_poll:
+#        - Northern Virginia (IAD)
+#        - Chicago (ORD)
+#        - Dallas Fort Worth (DFW)
+#        - London (LON)
+#      target_receiver: IPv4
+#      entity:
+#        get_resource: magento_server
+#      type: remote.http
+#      metadata:
+#        rax-heat:
+#          get_param: 'OS::stack_id'
+#        stack-name:
+#          get_param: 'OS::stack_name'
   magento_secondary:
     type: 'OS::Heat::ResourceGroup'
     properties:
@@ -662,16 +669,16 @@ resources:
                 domain:
                   get_param: magento_url
               template: 'web02.domain'
-          ansible_repo:
-            get_param: ansible_repo
+          #ansible_repo:
+          #  get_param: ansible_repo
           ssh_key:
             get_resource: ssh_key
           magento_pass:
             get_attr:
               - magento_pass
               - value
-          ansible_branch:
-            get_param: ansible_branch
+          #ansible_branch:
+          #  get_param: ansible_branch
           parent_stack_id:
             get_param: 'OS::stack_id'
           server_image:
