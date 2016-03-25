@@ -544,7 +544,7 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
-            bash /tmp/lamp/inventory/magento.sh $magento_url $db_host magento magento $magento_db_password 2>&1> /tmp/magento.sh.log
+            bash /tmp/lamp/inventory/magento.sh $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
           params:
             $magento_url: {get_param: magento_url}
             $db_host: {get_attr: [magento_database, hostname] }
