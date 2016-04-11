@@ -54,11 +54,11 @@ parameters:
     type: number
     description: Size of the Magento Cloud Database volume in GB
     label: Database Disk (in GB) - 64GB Instance
-  secondary_template:
-    default: 'https://raw.githubusercontent.com/rackspace-orchestration-templates/magento-small/stable/magento_small_secondary.yaml'
-    type: string
-    description: Template to use for secondary servers
-    label: Secondary Template
+#  secondary_template:
+#    default: 'https://raw.githubusercontent.com/rackspace-orchestration-templates/magento-small/stable/magento_small_secondary.yaml'
+#    type: string
+#    description: Template to use for secondary servers
+#    label: Secondary Template
 #  magento_lname:
 #    default: User
 #    type: string
@@ -133,15 +133,15 @@ parameters:
 #    constraints:
 #      - allowed_pattern: '^[a-zA-Z0-9]*$'
 #        description: Only can contain A-Z and 0-9
-  server_count:
-    default: 0
-    label: Number of Secondary Servers
-    type: number
-    description: Number of secondary servers to create.  These will be synchronized from the primary node
-    constraints:
-      - range:
-          max: 1
-          min: 0
+#  server_count:
+#    default: 0
+#    label: Number of Secondary Servers
+#    type: number
+#    description: Number of secondary servers to create.  These will be synchronized from the primary node
+#    constraints:
+#      - range:
+#          max: 2
+#          min: 0
   server_image:
     default: d77b62e4-5f79-4e03-8dc1-925472901f6d
     type: string
@@ -567,7 +567,7 @@ resources:
         rax-heat:
           get_param: 'OS::stack_id'
         build_config: 'base_mgdops_config'
-  secondary_server:
+  magento_secondary:
     type: 'OS::Nova::Server'
     properties:
       user_data: 
