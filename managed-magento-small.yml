@@ -567,6 +567,32 @@ resources:
         rax-heat:
           get_param: 'OS::stack_id'
         build_config: 'base_mgdops_config'
+  secondary_server:
+    type: 'OS::Nova::Server'
+    properties:
+      user_data: 
+        str_replace:
+          template: |
+            #!/bin/bash
+            curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
+      name:
+        str_replace:
+          params:
+            domain:
+              get_param: magento_url
+          template: 'web02.domain'
+      key_name:
+        get_resource: ssh_key
+      image:
+        get_param: server_image
+      software_config_transport: POLL_TEMP_URL
+      flavor:
+        get_param: server_flavor
+      config_drive: true
+      metadata:
+        rax-heat:
+          get_param: 'OS::stack_id'
+        build_config: 'base_mgdops_config'
 #  magento_config:
 #    type: 'OS::Heat::SoftwareConfig'
 #    properties:
@@ -647,42 +673,42 @@ resources:
 #          get_param: 'OS::stack_id'
 #        stack-name:
 #          get_param: 'OS::stack_name'
-  magento_secondary:
-    type: 'OS::Heat::ResourceGroup'
-    properties:
-      count:
-        get_param: server_count
-      resource_def:
-        type:
-          get_param: secondary_template
-        properties:
-          server_name:
-            str_replace:
-              params:
-                domain:
-                  get_param: magento_url
-              template: 'web02.domain'
-          #ansible_repo:
-          #  get_param: ansible_repo
-          ssh_key:
-            get_resource: ssh_key
-          magento_pass:
-            get_attr:
-              - magento_pass
-              - value
-          #ansible_branch:
-          #  get_param: ansible_branch
-          parent_stack_id:
-            get_param: 'OS::stack_id'
-          server_image:
-            get_param: server_image
-          server_flavor:
-            get_param: server_flavor
-          apache_default_domain:
-            get_param: magento_url
-          master_server:
-            get_attr:
-              - magento_server
-              - networks
-              - private
-              - 0
+#  magento_secondary:
+#    type: 'OS::Heat::ResourceGroup'
+#    properties:
+#      count:
+#        get_param: server_count
+#      resource_def:
+#        type:
+#          get_param: secondary_template
+#        properties:
+#          server_name:
+#            str_replace:
+#              params:
+#                domain:
+#                  get_param: magento_url
+#              template: 'web02.domain'
+#          #ansible_repo:
+#          #  get_param: ansible_repo
+#          ssh_key:
+#            get_resource: ssh_key
+#          magento_pass:
+#            get_attr:
+#              - magento_pass
+#              - value
+#          #ansible_branch:
+#          #  get_param: ansible_branch
+#          parent_stack_id:
+#            get_param: 'OS::stack_id'
+#          server_image:
+#            get_param: server_image
+#          server_flavor:
+#            get_param: server_flavor
+#          apache_default_domain:
+#            get_param: magento_url
+#          master_server:
+#            get_attr:
+#              - magento_server
+#              - networks
+#              - private
+#              - 0
