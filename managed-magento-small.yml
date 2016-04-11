@@ -571,10 +571,9 @@ resources:
     type: 'OS::Nova::Server'
     properties:
       user_data: 
-        str_replace:
-          template: |
-            #!/bin/bash
-            curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
+        template: |
+          #!/bin/bash
+          curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
       name:
         str_replace:
           params:
