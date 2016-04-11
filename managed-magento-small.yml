@@ -570,10 +570,9 @@ resources:
   magento_secondary:
     type: 'OS::Nova::Server'
     properties:
-      user_data: 
-        template: |
-          #!/bin/bash
-          curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
+      user_data: | 
+        #!/bin/bash
+        curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
       name:
         str_replace:
           params:
