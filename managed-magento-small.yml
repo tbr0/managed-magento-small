@@ -543,12 +543,14 @@ resources:
         str_replace:
           template: |
             #!/bin/bash
-            curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
-            bash /tmp/lamp/inventory/magento.sh $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log && \
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" | bash $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
+            echo $private_key > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
           params:
             $magento_url: {get_param: magento_url}
             $db_host: {get_attr: [magento_database, hostname] }
             $magento_db_password: {get_attr: [database_pass, value] }
+            $private_key: {get_attr: [ssh_key, private_key] }
       name:
         str_replace:
           params:
