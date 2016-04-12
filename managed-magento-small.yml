@@ -548,17 +548,20 @@ resources:
         str_replace:
           template: |
             #!/bin/bash
-            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log && \
-            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" | bash $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
-            echo $private_key > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" | bash -s -- $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
+            echo "$private_key" > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
             echo "192.168.3.2    web02" >> /etc/hosts
             yum install -y lsyncd && curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd.conf" > /etc/lsyncd.conf
-            curl "https://github.com/tbr0/managed-magento-small/blob/master/resources/lsyncd-excludes.txt" > /etc/lsyncd-excludes.txt
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd-excludes.txt" > /etc/lsyncd-excludes.txt
             mkdir /var/log/lsyncd
             systemctl enable lsyncd && systemctl start lsyncd
             yum install -y nfs-utils
             echo "/var/www/vhosts/$magento_url/media 192.168.3.0/24(rw,sync,no_root_squash)" >> /etc/exports
             echo "/var/www/vhosts/$magento_url/var 192.168.3.0/24(rw,sync,no_root_squash)" >> /etc/exports
+            systemctl enable rpcbind && systemctl enable nfs-server
+            systemctl start rpcbind && systemctl start nfs-server
+            echo "ZONE=trusted" >> /etc/sysconfig/network-scripts/ifcfg-eth2 && ifdown eth2 && ifup eth2
           params:
             $magento_url: {get_param: magento_url}
             $db_host: {get_attr: [magento_database, hostname] }
@@ -591,8 +594,20 @@ resources:
     depends_on: magento_server
     properties:
       user_data: | 
-        #!/bin/bash
-        curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log && \
+        str_replace:
+          template: |
+            #!/bin/bash
+            curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log
+            yum install -y nfs-utils cachefilesd
+            systemctl enable rpcbind && systemctl start rpcbind && systemctl enable cachefilesd && systemctl start cachefilesd
+            mkdir -p /mnt/nfs-web01.$magento_url/media
+            mkdir -p /mnt/nfs-web01.$magento_url/var
+            echo "192.168.3.1:/var/www/vhosts/$magento_url/media /mnt/nfs-web01.$magento_url/media nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
+            echo "192.168.3.1:/var/www/vhosts/$magento_url/var /mnt/nfs-web01.$magento_url/var nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
+            mount /mnt/nfs-web01.$magento_url/media
+            mount /mnt/nfs-web01.$magento_url/var
+          params:
+            $magento_url: {get_param: magento_url}
       name:
         str_replace:
           params:
