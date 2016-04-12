@@ -551,6 +551,10 @@ resources:
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log && \
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" | bash $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
             echo $private_key > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
+            echo "192.168.3.2    web02" >> /etc/hosts
+            yum install -y lsyncd && curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd.conf" > /etc/lsyncd.conf
+            curl "https://github.com/tbr0/managed-magento-small/blob/master/resources/lsyncd-excludes.txt" > /etc/lsyncd-excludes.txt
+            mkdir /var/log/lsyncd
           params:
             $magento_url: {get_param: magento_url}
             $db_host: {get_attr: [magento_database, hostname] }
