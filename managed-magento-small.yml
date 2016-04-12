@@ -597,7 +597,7 @@ resources:
         str_replace:
           template: |
             #!/bin/bash
-            curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp2.sh" | bash > /tmp/ansible-lamp.log
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
             yum install -y nfs-utils cachefilesd
             systemctl enable rpcbind && systemctl start rpcbind && systemctl enable cachefilesd && systemctl start cachefilesd
             mkdir -p /mnt/nfs-web01.$magento_url/media
