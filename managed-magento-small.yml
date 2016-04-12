@@ -606,6 +606,8 @@ resources:
             echo "192.168.3.1:/var/www/vhosts/$magento_url/var /mnt/nfs-web01.$magento_url/var nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
             mount /mnt/nfs-web01.$magento_url/media
             mount /mnt/nfs-web01.$magento_url/var
+            ln -s /mnt/nfs-web01.$magento_url/media /var/www/vhosts/$magento_url/media
+            ln -s /mnt/nfs-web01.$magento_url/media /var/www/vhosts/$magento_url/var
           params:
             $magento_url: {get_param: magento_url}
       name:
