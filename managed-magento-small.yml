@@ -183,7 +183,7 @@ outputs:
     value:
       get_attr:
         - magento_secondary
-        - public_ip
+        - accessIPv4
   magento_public_url:
     description: Magento Public URL
     value:
