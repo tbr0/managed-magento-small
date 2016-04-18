@@ -9,8 +9,6 @@ echo "Need to disable requiretty so we can run commands as Apache." && \
 sed -i /etc/sudoers -e "s/Defaults    requiretty/#Defaults     requiretty/g" && \
 echo "Installing Magento Depedencies" && \
 yum install -y php56u-mcrypt php56u-soap && \
-echo "Configuring Virtual Host" && \
-curl -s -H "Host: ${DOMAIN}" http://justcurl.com | bash && \
 systemctl reload httpd && \
 echo "Downloading Latest Magento" && \
 wget -O /var/www/vhosts/${DOMAIN}/magento.tgz http://c92a3489532391bf268e-49b46254d7042badb24da80286b0d71b.r87.cf5.rackcdn.com/magento-1.9.2.2.tar-2015-10-27-03-19-32.gz && \
@@ -42,4 +40,6 @@ sudo -u apache /bin/php -f /var/www/vhosts/${DOMAIN}/install.php -- \
 --admin_email "admin@example.com" \
 --admin_username "admin" \
 --admin_password "test123" \
+echo "Changing sudoers file back to normal." && \
+sed -i /etc/sudoers -e "s/#Defaults    requiretty/Defaults     requiretty/g" && \
 echo "Done."

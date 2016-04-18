@@ -542,6 +542,7 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/apache-create-virtualhost.sh" | bash -s -- $domain
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" \
             | bash -s -- $domain $db_host magento magento $magento_db_password > /tmp/magento-install.sh.log 2>&1
             echo "$private_key" > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
