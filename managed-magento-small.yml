@@ -550,6 +550,7 @@ resources:
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd-install.sh" | bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/nfs-server-install.sh" | bash -s -- $domain
             firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.3.0/24" accept' && firewall-cmd --reload
+            firewall-cmd --permanent --zone=public --add-port=6081/tcp && firewall-cmd --reload
           params:
             $domain: {get_param: magento_url}
             $db_host: {get_attr: [magento_database, hostname] }
@@ -598,6 +599,7 @@ resources:
             mount /mnt/nfs-web01.$domain/var
             ln -s /mnt/nfs-web01.$domain/media /var/www/vhosts/$domain/media
             ln -s /mnt/nfs-web01.$domain/var /var/www/vhosts/$domain/var
+            firewall-cmd --permanent --zone=public --add-port=6081/tcp && firewall-cmd --reload
           params:
             $domain: {get_param: magento_url}
       name:
