@@ -26,8 +26,8 @@ sub vcl_recv {
         }
     }
 
-    ### do not cache these files:
-    ### commenting out the "multipart/form-data" portion because I don't think it's necessary.
+    ### send certain requests to the master server.
+    ### commenting out the "multipart/form-data" portion because I don't think it's necessary but keeping it around just incase.
     #if (req.url ~ "admin|captcha|export|install|contacts" || req.http.Content-Type ~ "multipart/form-data")
     if (req.url ~ "admin|captcha|export|install|contacts")
     {
