@@ -547,7 +547,7 @@ resources:
             echo "$private_key" > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
             echo "192.168.3.2    web02" >> /etc/hosts
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd-install.sh" | bash
-            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/nfs-install.sh" | bash -s -- $domain
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/nfs-server-install.sh" | bash -s -- $domain
             firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.3.0/24" accept' && firewall-cmd --reload
           params:
             $domain: {get_param: magento_url}
@@ -585,18 +585,19 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
+            curl -H "Host: $domain" justcurl.com | bash
             yum install -y nfs-utils cachefilesd
             systemctl enable rpcbind && systemctl start rpcbind && systemctl enable cachefilesd && systemctl start cachefilesd
-            mkdir -p /mnt/nfs-web01.$magento_url/media
-            mkdir -p /mnt/nfs-web01.$magento_url/var
-            echo "192.168.3.1:/var/www/vhosts/$magento_url/media /mnt/nfs-web01.$magento_url/media nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
-            echo "192.168.3.1:/var/www/vhosts/$magento_url/var /mnt/nfs-web01.$magento_url/var nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
-            mount /mnt/nfs-web01.$magento_url/media
-            mount /mnt/nfs-web01.$magento_url/var
-            ln -s /mnt/nfs-web01.$magento_url/media /var/www/vhosts/$magento_url/media
-            ln -s /mnt/nfs-web01.$magento_url/media /var/www/vhosts/$magento_url/var
+            mkdir -p /mnt/nfs-web01.$domain/media
+            mkdir -p /mnt/nfs-web01.$domain/var
+            echo "192.168.3.1:/var/www/vhosts/$domain/media /mnt/nfs-web01.$domain/media nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
+            echo "192.168.3.1:/var/www/vhosts/$domain/var /mnt/nfs-web01.$domain/var nfs rsize=32768,wsize=32768,intr,hard,noatime,proto=tcp,sync,fsc,_netdev 0 0" >> /etc/fstab
+            mount /mnt/nfs-web01.$domain/media
+            mount /mnt/nfs-web01.$domain/var
+            ln -s /mnt/nfs-web01.$domain/media /var/www/vhosts/$domain/media
+            ln -s /mnt/nfs-web01.$domain/media /var/www/vhosts/$domain/var
           params:
-            $magento_url: {get_param: magento_url}
+            $domain: {get_param: magento_url}
       name:
         str_replace:
           params:
