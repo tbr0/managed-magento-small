@@ -212,44 +212,43 @@ outputs:
 resources:
   database_pass:
     type: 'OS::Heat::RandomString'
-#  load_balancer:
-#    depends_on:
-#      - deploy_magento
-#      - magento_secondary
-#    type: 'Rackspace::Cloud::LoadBalancer'
-#    properties:
-#      protocol: HTTP
-#      name:
-#        str_replace:
-#          params:
-#            domain:
-#              get_param: magento_url
-#          template: 'lb01.domain'
-#      algorithm: ROUND_ROBIN
-#      virtualIps:
-#        - ipVersion: IPV4
-#          type: PUBLIC
-#      contentCaching: ENABLED
-#      timeout: 120
-#      nodes:
-#        - addresses:
-#            - get_attr:
-#                - magento_server
-#                - networks
-#                - private
-#                - 0
-#          condition: ENABLED
-#          port: 80
-#        - addresses:
-#            get_attr:
-#              - magento_secondary
-#              - private_ip
-#          condition: ENABLED
-#          port: 80
-#      port: 80
-#      metadata:
-#        rax-heat:
-#          get_param: 'OS::stack_id'
+  load_balancer:
+    depends_on:
+      - magento_secondary
+    type: 'Rackspace::Cloud::LoadBalancer'
+    properties:
+      protocol: HTTP
+      name:
+        str_replace:
+          params:
+            domain:
+              get_param: magento_url
+          template: 'lb01.domain'
+      algorithm: ROUND_ROBIN
+      virtualIps:
+        - ipVersion: IPV4
+          type: PUBLIC
+      contentCaching: ENABLED
+      timeout: 120
+      nodes:
+        - addresses:
+            - get_attr:
+                - magento_server
+                - networks
+                - private
+                - 0
+          condition: ENABLED
+          port: 6081
+        - addresses:
+            get_attr:
+              - magento_secondary
+              - private_ip
+          condition: ENABLED
+          port: 6081
+      port: 80
+      metadata:
+        rax-heat:
+          get_param: 'OS::stack_id'
 #  deploy_roles:
 #    type: 'OS::Heat::SoftwareDeployment'
 #    properties:
@@ -587,7 +586,7 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
-            curl -H "Host: $domain" justcurl.com | bash && systemctl reload httpd
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/apache-create-virtualhost.sh" | bash -s -- $domain
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/varnish-install.sh" | bash
             yum install -y nfs-utils cachefilesd
             systemctl enable rpcbind && systemctl start rpcbind && systemctl enable cachefilesd && systemctl start cachefilesd
