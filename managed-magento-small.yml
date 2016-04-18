@@ -546,6 +546,7 @@ resources:
             | bash -s -- $domain $db_host magento magento $magento_db_password > /tmp/magento-install.sh.log 2>&1
             echo "$private_key" > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
             echo "192.168.3.2    web02" >> /etc/hosts
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/varnish-install.sh" | bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd-install.sh" | bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/nfs-server-install.sh" | bash -s -- $domain
             firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.3.0/24" accept' && firewall-cmd --reload
@@ -585,7 +586,8 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
-            curl -H "Host: $domain" justcurl.com | bash
+            curl -H "Host: $domain" justcurl.com | bash && systemctl reload httpd
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/varnish-install.sh" | bash
             yum install -y nfs-utils cachefilesd
             systemctl enable rpcbind && systemctl start rpcbind && systemctl enable cachefilesd && systemctl start cachefilesd
             mkdir -p /mnt/nfs-web01.$domain/media
