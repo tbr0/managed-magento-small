@@ -9,24 +9,19 @@ parameter_groups:
     label: Magento Settings
   - parameters:
       - server_image
-#      - secondary_template
-#      - ansible_branch
-#      - ansible_repo
     label: rax-dev-params
 heat_template_version: '2015-10-15'
 description: >
 
-  This stack is intended for low to medium traffic production websites and can be
-  scaled as needed to accommodate future growth.
+  This stack only works on CentOS 7 (PVHVM)
 
-  This stack includes a Cloud Load Balancer, Cloud Database, and a Primary web
-  server (plus optional secondary servers).
+  This stack is intended for starting out a Magento environment, and is one-time use only.
+
+  This stack includes a Cloud Load Balancer, Cloud Database, primary and secondary Cloud Server.
 
   It also includes Cloud Monitoring and Cloud Backups.
 
   This stack is running:
-
-  - [Redis](http://redis.io/)
 
   - Cloud Database running MySQL 5.6 where available
 
@@ -147,8 +142,6 @@ parameters:
     type: string
     constraints:
       - allowed_values:
-          - f4bbbce2-50b0-4b07-bf09-96c175a45f4b
-          - b5a7e8bf-2463-47ba-bf32-d45efaccc21a
           - d77b62e4-5f79-4e03-8dc1-925472901f6d
 outputs:
   mysql_password:
@@ -549,21 +542,15 @@ resources:
           template: |
             #!/bin/bash
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
-            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" | bash -s -- $magento_url $db_host magento magento $magento_db_password > /tmp/magento.sh.log 2>&1
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" \
+            | bash -s -- $domain $db_host magento magento $magento_db_password > /tmp/magento-install.sh.log 2>&1
             echo "$private_key" > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
             echo "192.168.3.2    web02" >> /etc/hosts
-            yum install -y lsyncd && curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd.conf" > /etc/lsyncd.conf
-            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd-excludes.txt" > /etc/lsyncd-excludes.txt
-            mkdir /var/log/lsyncd
-            systemctl enable lsyncd && systemctl start lsyncd
-            yum install -y nfs-utils
-            echo "/var/www/vhosts/$magento_url/media 192.168.3.0/24(rw,sync,no_root_squash)" >> /etc/exports
-            echo "/var/www/vhosts/$magento_url/var 192.168.3.0/24(rw,sync,no_root_squash)" >> /etc/exports
-            systemctl enable rpcbind && systemctl enable nfs-server
-            systemctl start rpcbind && systemctl start nfs-server
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/lsyncd-install.sh" | bash
+            curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/nfs-install.sh" | bash -s -- $domain
             firewall-cmd --permanent --zone=public --add-rich-rule='rule family="ipv4" source address="192.168.3.0/24" accept' && firewall-cmd --reload
           params:
-            $magento_url: {get_param: magento_url}
+            $domain: {get_param: magento_url}
             $db_host: {get_attr: [magento_database, hostname] }
             $magento_db_password: {get_attr: [database_pass, value] }
             $private_key: {get_attr: [ssh_key, private_key] }
