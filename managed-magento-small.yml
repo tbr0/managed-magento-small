@@ -242,7 +242,8 @@ resources:
         - addresses:
             get_attr:
               - magento_secondary
-              - private_ip
+              - networks
+              - private
           condition: ENABLED
           port: 6081
       port: 80
