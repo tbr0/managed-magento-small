@@ -597,7 +597,7 @@ resources:
             mount /mnt/nfs-web01.$domain/media
             mount /mnt/nfs-web01.$domain/var
             ln -s /mnt/nfs-web01.$domain/media /var/www/vhosts/$domain/media
-            ln -s /mnt/nfs-web01.$domain/media /var/www/vhosts/$domain/var
+            ln -s /mnt/nfs-web01.$domain/var /var/www/vhosts/$domain/var
           params:
             $domain: {get_param: magento_url}
       name:
