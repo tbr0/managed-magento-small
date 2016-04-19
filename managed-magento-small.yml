@@ -160,7 +160,7 @@ outputs:
           domain:
             get_param: magento_url
         template: 'https://domain/admin/'
-   magento_login_user:
+  magento_login_user:
     description: Magento Admin User
     value:
       get_param: magento_user
