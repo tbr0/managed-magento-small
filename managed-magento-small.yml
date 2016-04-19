@@ -52,7 +52,7 @@ parameters:
           min: 10
     type: number
     description: Size of the Magento Cloud Database volume in GB
-    label: Database Disk (in GB) - 64GB Instance
+    label: Database Disk (in GB)
   server_image:
     default: d77b62e4-5f79-4e03-8dc1-925472901f6d
     type: string
