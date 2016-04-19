@@ -1,10 +1,10 @@
 parameter_groups:
   - parameters:
       - magento_url
-#      - magento_user
+      - magento_user
       - magento_email
-#      - magento_fname
-#      - magento_lname
+      - magento_fname
+      - magento_lname
       - magento_eula
     label: Magento Settings
   - parameters:
@@ -15,9 +15,9 @@ description: >
 
   This stack only works on CentOS 7 (PVHVM)
 
-  This stack is intended for starting out a Magento environment, and is one-time use only.
+  This stack is intended for starting out a Magento environment, and is one-time use only, do not modify recipe and run again as it will delete current environment.
 
-  This stack includes a Cloud Load Balancer, Cloud Database, primary and secondary Cloud Server.
+  This stack includes a Cloud Load Balancer, Cloud Database, a primary and secondary Cloud Server.
 
   It also includes Cloud Monitoring and Cloud Backups.
 
@@ -26,7 +26,11 @@ description: >
   - Cloud Database running MySQL 5.6 where available
 
   - The latest [Magento 1.9.x Community
-  Edition](http://www.magentocommerce.com/product/community-edition/),
+  Edition](http://www.magentocommerce.com/product/community-edition/)
+
+  - Lsyncd excluding var/ and media/
+
+  - NFS server on web01 which provides var/ and media/ to NFS client on web02. Location of mounts on web02 is /mnt/nfs-web01.domain.com/
 
 parameters:
   database_flavor:
@@ -49,26 +53,12 @@ parameters:
     type: number
     description: Size of the Magento Cloud Database volume in GB
     label: Database Disk (in GB) - 64GB Instance
-#  secondary_template:
-#    default: 'https://raw.githubusercontent.com/rackspace-orchestration-templates/magento-small/stable/magento_small_secondary.yaml'
-#    type: string
-#    description: Template to use for secondary servers
-#    label: Secondary Template
-#  magento_lname:
-#    default: User
-#    type: string
-#    description: Last name for Magento admin
-#    label: Magento Admin Last Name
-  magento_email:
-    default: admin@example.com
+  server_image:
+    default: d77b62e4-5f79-4e03-8dc1-925472901f6d
     type: string
-    description: E-Mail for Magento admin
-    label: Magento Admin E-Mail
-#  ansible_repo:
-#    default: 'https://github.com/tbr0/ansible-managed-lamp'
-#    type: string
-#    description: 'The Ansible Roles will be pulled from Git, using the repo provided'
-#    label: Git Repo for Ansible Roles
+    constraints:
+      - allowed_values:
+          - d77b62e4-5f79-4e03-8dc1-925472901f6d
   server_flavor:
     default: 2 GB General Purpose v1
     label: Flavor for Magento Server
@@ -79,11 +69,29 @@ parameters:
           - 2 GB General Purpose v1
           - 4 GB General Purpose v1
           - 8 GB General Purpose v1
-#  magento_fname:
-#    default: Joe
-#    type: string
-#    description: First name for Magento admin
-#    label: Magento Admin First Name
+  magento_fname:
+    default: Joe
+    type: string
+    description: First name for Magento admin
+    label: Magento Admin First Name
+  magento_lname:
+    default: User
+    type: string
+    description: Last name for Magento admin
+    label: Magento Admin Last Name
+  magento_email:
+    default: admin@example.com
+    type: string
+    description: E-Mail for Magento admin
+    label: Magento Admin E-Mail
+  magento_user:
+    default: admin
+    label: Magento Admin Username
+    type: string
+    description: Username for Magento admin
+    constraints:
+      - allowed_pattern: '^[a-zA-Z0-9]*$'
+        description: Only can contain A-Z and 0-9
   magento_url:
     default: example.com
     label: Site Domain
@@ -92,24 +100,6 @@ parameters:
     constraints:
       - allowed_pattern: '^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$'
         description: Must be a valid domain name
-#  magento_install:
-#    default: Fresh install of the latest Magento CE 1.9.x release
-#    label: How should Magento be deployed?
-#    type: string
-#    description: >
-#      This option determines whether or not to install Magento and/or the sample
-#
-#      data, or if you will need to upload your own Magento code.
-#    constraints:
-#      - allowed_values:
-#          - Fresh install of the latest Magento CE 1.9.x release
-#          - Fresh install of the latest Magento CE 1.9.x release (including sample data)
-#          - "Don't install Magento. I will upload an existing Magento site (see instructions)"
-#  ansible_branch:
-#    default: master
-#    type: string
-#    description: 'The Ansible Roles will be pulled from Git, using the tag or branch provided'
-#    label: Git Branch or Tag for Ansible Roles
   magento_eula:
     label: Agree to Terms?
     type: boolean
@@ -120,29 +110,6 @@ parameters:
           which can be found here: http://opensource.org/licenses/osl-3.0.php
         allowed_values:
           - true
-#  magento_user:
-#    default: admin
-#    label: Magento Admin Username
-#    type: string
-#    description: Username for Magento admin
-#    constraints:
-#      - allowed_pattern: '^[a-zA-Z0-9]*$'
-#        description: Only can contain A-Z and 0-9
-#  server_count:
-#    default: 0
-#    label: Number of Secondary Servers
-#    type: number
-#    description: Number of secondary servers to create.  These will be synchronized from the primary node
-#    constraints:
-#      - range:
-#          max: 2
-#          min: 0
-  server_image:
-    default: d77b62e4-5f79-4e03-8dc1-925472901f6d
-    type: string
-    constraints:
-      - allowed_values:
-          - d77b62e4-5f79-4e03-8dc1-925472901f6d
 outputs:
   mysql_password:
     description: Database Password
@@ -171,12 +138,6 @@ outputs:
       get_attr:
         - ssh_pass
         - value
-  secondary_ips:
-    description: Secondary Node IPs
-    value:
-      get_attr:
-        - magento_secondary
-        - accessIPv4
   magento_public_url:
     description: Magento Public URL
     value:
@@ -185,30 +146,30 @@ outputs:
           domain:
             get_param: magento_url
         template: 'http://domain/'
-#  magento_login_password:
-#    description: Magento Admin Password
-#    value:
-#      get_attr:
-#        - magento_pass
-#        - value
-#  magento_admin_url:
-#    description: Magento Admin URL
-#    value:
-#      str_replace:
-#        params:
-#          domain:
-#            get_param: magento_url
-#        template: 'https://domain/admin/'
-#   magento_login_user:
-#    description: Magento Admin User
-#    value:
-#      get_param: magento_user
-#  magento_public_ip:
-#    description: Load Balancer IP
-#    value:
-#      get_attr:
-#        - load_balancer
-#        - PublicIp
+  magento_login_password:
+    description: Magento Admin Password
+    value:
+      get_attr:
+        - magento_pass
+        - value
+  magento_admin_url:
+    description: Magento Admin URL
+    value:
+      str_replace:
+        params:
+          domain:
+            get_param: magento_url
+        template: 'https://domain/admin/'
+   magento_login_user:
+    description: Magento Admin User
+    value:
+      get_param: magento_user
+  magento_public_ip:
+    description: Load Balancer IP
+    value:
+      get_attr:
+        - load_balancer
+        - PublicIp
 resources:
   database_pass:
     type: 'OS::Heat::RandomString'
@@ -224,7 +185,7 @@ resources:
             domain:
               get_param: magento_url
           template: 'lb01.domain'
-      algorithm: ROUND_ROBIN
+      algorithm: LEAST_CONNECTIONS
       virtualIps:
         - ipVersion: IPV4
           type: PUBLIC
@@ -250,14 +211,6 @@ resources:
       metadata:
         rax-heat:
           get_param: 'OS::stack_id'
-#  deploy_roles:
-#    type: 'OS::Heat::SoftwareDeployment'
-#    properties:
-#      signal_transport: TEMP_URL_SIGNAL
-#      config:
-#        get_resource: upload_role_config
-#      server:
-#        get_resource: magento_server
   magento_database:
     type: 'OS::Trove::Instance'
     properties:
@@ -291,124 +244,6 @@ resources:
         get_param: database_disk
   holland_pass:
     type: 'OS::Heat::RandomString'
-#  deploy_magento:
-#    depends_on: deploy_roles
-#    type: 'OS::Heat::SoftwareDeployment'
-#    properties:
-#      input_values:
-#        magento_admin_user:
-#          get_param: magento_user
-#        magento_reach_dropdown:
-#          get_param: magento_install
-#        magento_vhost_domain:
-#          get_param: magento_url
-#        magento_admin_lname:
-#          get_param: magento_lname
-#        nginx_vhost_str:
-#          get_param: magento_url
-#        magento_db_password:
-#          get_attr:
-#            - database_pass
-#            - value
-#        tz: America/Chicago
-#        magento_admin_fname:
-#          get_param: magento_fname
-#        magento_redis_host:
-#          get_attr:
-#            - magento_server
-#            - networks
-#            - private
-#            - 0
-#        mysql_host_ip:
-#          get_attr:
-#            - magento_database
-#            - hostname
-#        holland_mysql_host:
-#          get_attr:
-#            - magento_database
-#            - hostname
-#        magento_admin_pass:
-#          get_attr:
-#            - magento_pass
-#            - value
-#        magento_admin_email:
-#          get_param: magento_email
-#        magento_db_name: magento
-#        holland_mysql_password:
-#          get_attr:
-#            - holland_pass
-#            - value
-#        magento_db_user: magento
-#        redis_host_ip:
-#          get_attr:
-#            - magento_server
-#            - networks
-#            - private
-#            - 0
-#        magento_sftp_password:
-#          get_attr:
-#            - ssh_pass
-#            - value
-#        holland_create_user: false
-#        holland_mysql_user: holland
-#        redis_instances:
-#          - maxmemory: 1gb
-#            persistent: 'FALSE'
-#            port: '6381'
-#            name: fpc
-#          - maxmemory: 1gb
-#            persistent: 'FALSE'
-#            port: '6379'
-#            name: obj
-#          - maxmemory: 1gb
-#            persistent: 'TRUE'
-#            port: '6380'
-#            name: ses
-#        magento_sftp_user: magento
-#      signal_transport: TEMP_URL_SIGNAL
-#      config:
-#        get_resource: magento_config
-#      server:
-#        get_resource: magento_server
-#  other_config:
-#    type: 'OS::Heat::SoftwareConfig'
-#    properties:
-#      inputs:
-#        - default: '[]'
-#          type: CommaDelimitedList
-#          name: lsync_dirs
-#        - default: '[]'
-#          type: CommaDelimitedList
-#          name: lsync_servers
-#        - default: '[]'
-#          type: CommaDelimitedList
-#          name: lsync_exclude
-#        - default: '[]'
-#          type: CommaDelimitedList
-#          name: firewall_nodes
-#        - default: '[]'
-#          type: CommaDelimitedList
-#          name: firewall_node_rules
-#      config: |
-#        ---
-#        - name: Install and configure other things
-#          hosts: localhost
-#          connection: local
-#          roles:
-#          - lsync
-#          - firewall
-#      group: ansible
-#  upload_role_config:
-#    type: 'OS::Heat::SoftwareConfig'
-#    properties:
-#      group: script
-#      outputs:
-#      - name: result
-#      config: |
-#          #!/bin/sh -x
-#          #set -e
-#          #curl "https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp.sh" | bash > $heat_outputs_path.result
-#          echo "test-https://raw.githubusercontent.com/tbr0/scripts/master/ansible-lamp.sh" > $heat_outputs_path.result
   ssh_key:
     type: 'OS::Nova::KeyPair'
     properties:
@@ -419,116 +254,6 @@ resources:
     type: 'OS::Heat::RandomString'
   magento_pass:
     type: 'OS::Heat::RandomString'
-#  magento_backup:
-#    depends_on: magento_server
-#    type: 'Rackspace::Cloud::BackupConfig'
-#    properties:
-#      TimeZoneId: Central Standard Time
-#      StartTimeMinute: 0
-#      HourInterval: null
-#      server:
-#        get_resource: magento_server
-#      StartTimeHour: 1
-#      StartTimeAmPm: AM
-#      BackupConfigurationName:
-#        str_replace:
-#          params:
-#            stack:
-#              get_param: 'OS::stack_name'
-#          template: stack Weekly Backup
-#      Inclusions:
-#        - FileItemType: Folder
-#          FilePath: /var/spool/holland
-#        - FileItemType: Folder
-#          FilePath: /var/www/
-#      NotifyFailure: true
-#      NotifyRecipients:
-#        get_param: magento_email
-#      DayOfWeekId: 0
-#      VersionRetention: 30
-#      Frequency: Weekly
-#  deploy_other:
-#    depends_on: deploy_magento
-#    type: 'OS::Heat::SoftwareDeployment'
-#    properties:
-#      input_values:
-#        lsync_private_key:
-#          get_attr:
-#            - ssh_key
-#            - private_key
-#        firewall_global_rules:
-#          - '0.0.0.0,0,22,tcp'
-#          - '0.0.0.0,0,80,tcp'
-#          - '0.0.0.0,0,443,tcp'
-#        lsync_dirs:
-#          - /var/www/vhosts
-#        lsync_exclude:
-#          - str_replace:
-#              params:
-#                domain:
-#                  get_param: magento_url
-#              template: /var/www/vhosts/domain/httpdocs/var/log/
-#          - str_replace:
-#              params:
-#                domain:
-#                  get_param: magento_url
-#              template: /var/www/vhosts/domain/httpdocs/var/cache/
-#        firewall_nodes:
-#          get_attr:
-#            - magento_secondary
-#            - private_ip
-#        firewall_node_rules:
-#          - '32,6379,tcp'
-#          - '32,6380,tcp'
-#          - '32,6381,tcp'
-#        lsync_servers:
-#          get_attr:
-#            - magento_secondary
-#            - private_ip
-#      signal_transport: TEMP_URL_SIGNAL
-#      config:
-#        get_resource: other_config
-#      server:
-#        get_resource: magento_server
-#  magento_server_http_check:
-#    depends_on: deploy_magento
-#    type: 'Rackspace::CloudMonitoring::Check'
-#    properties:
-#      period: 120
-#      label:
-#        str_replace:
-#          params:
-#            stack:
-#              get_param: 'OS::stack_name'
-#          template: stack Master HTTP Check
-#      target_hostname:
-#        get_attr:
-#          - magento_server
-#          - accessIPv4
-#      details:
-#        url:
-#          str_replace:
-#            params:
-#              ipaddr:
-#                get_attr:
-#                  - magento_server
-#                  - accessIPv4
-#            template: 'http://ipaddr'
-#      timeout: 10
-#      monitoring_zones_poll:
-#        - Northern Virginia (IAD)
-#        - Chicago (ORD)
-#        - Dallas Fort Worth (DFW)
-#        - London (LON)
-#      target_receiver: IPv4
-#      entity:
-#        get_resource: magento_server
-#      type: remote.http
-#      metadata:
-#        rax-heat:
-#          get_param: 'OS::stack_id'
-#        stack-name:
-#          get_param: 'OS::stack_name'
   magento_network:
     type: Rackspace::Cloud::Network
     properties:
@@ -544,7 +269,7 @@ resources:
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/ansible-lamp-kick-orchestration.sh" | bash > /tmp/ansible-lamp.log
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/apache-create-virtualhost.sh" | bash -s -- $domain
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/magento-install.sh" \
-            | bash -s -- $domain $db_host magento magento $magento_db_password > /tmp/magento-install.sh.log 2>&1
+            | bash -s -- $domain $db_host magento magento $magento_db_password $magento_fname $magento_lname $magento_email $magento_user $magento_pass > /tmp/magento-install.sh.log 2>&1
             echo "$private_key" > /root/.ssh/id_rsa && chmod 0600 /root/.ssh/id_rsa
             echo "192.168.3.2    web02" >> /etc/hosts
             curl "https://raw.githubusercontent.com/tbr0/managed-magento-small/master/resources/varnish-install.sh" | bash
@@ -557,6 +282,11 @@ resources:
             $db_host: {get_attr: [magento_database, hostname] }
             $magento_db_password: {get_attr: [database_pass, value] }
             $private_key: {get_attr: [ssh_key, private_key] }
+            $magento_fname: {get_param: magento_fname}
+            $magento_lname: {get_param: magento_lname}
+            $magento_email: {get_param: magento_email}
+            $magento_user: {get_param: magento_user}
+            $magento_pass: {get_attr: [magento_pass, value] }
       name:
         str_replace:
           params:
@@ -625,122 +355,3 @@ resources:
         rax-heat:
           get_param: 'OS::stack_id'
         build_config: 'base_mgdops_config'
-#  magento_config:
-#    type: 'OS::Heat::SoftwareConfig'
-#    properties:
-#      group: ansible
-#      config: |
-#        ---
-#        - hosts: all
-#          user: root
-#          connection: local
-#          tasks:
-#            - group_by: key={{ ansible_os_family }}
-#              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
-#        ### Applies only to RedHat systems
-#        - hosts: RedHat
-#          user: root
-#          gather_facts: false
-#          pre_tasks:
-#            - include_vars: group_vars/RHEL_7.yml
-#              when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
-#              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
-#          roles:
-#            - { role: IUS-repos, tags: [ ius-repos, apache2, php5, mysql ] }
-#            - { role: apache2, tags: apache2 }
-#            - { role: php5, tags: php5 }
-#            - { role: mysql, tags: mysql }
-#            - { role: phpmyadmin, tags: phpmyadmin }
-#            - { role: holland, tags: holland }
-#        ### Applies only to Debian systems
-#        - hosts: Debian
-#          user: root
-#          gather_facts: false
-#          pre_tasks:
-#            - include_vars: group_vars/Ubuntu_14.yml
-#              when: ansible_os_family == 'Debian' and (ansible_distribution_version == '14.04' or ansible_distribution_version == '8')
-#              tags: [ 'ius-repos', 'apache2', 'php5', 'mysql', 'phpmyadmin', 'holland' ]
-#          roles:
-#            - { role: apache2, tags: apache2 }
-#            - { role: php5, tags: php5 }
-#            - { role: mysql, tags: mysql }
-#            - { role: phpmyadmin, tags: phpmyadmin }
-#            - { role: holland, tags: holland }
-#  load_balancer_http_check:
-#    depends_on: load_balancer
-#    type: 'Rackspace::CloudMonitoring::Check'
-#    properties:
-#      period: 120
-#      label:
-#        str_replace:
-#          params:
-#            stack:
-#              get_param: 'OS::stack_name'
-#          template: stack Load Balancer HTTP Check
-#      target_hostname:
-#        get_attr:
-#          - load_balancer
-#          - PublicIp
-#      details:
-#        url:
-#          str_replace:
-#            params:
-#              ipaddr:
-#                get_attr:
-#                  - load_balancer
-#                  - PublicIp
-#            template: 'http://ipaddr'
-#      timeout: 10
-#      monitoring_zones_poll:
-#        - Northern Virginia (IAD)
-#        - Chicago (ORD)
-#        - Dallas Fort Worth (DFW)
-#        - London (LON)
-#      target_receiver: IPv4
-#      entity:
-#        get_resource: magento_server
-#      type: remote.http
-#      metadata:
-#        rax-heat:
-#          get_param: 'OS::stack_id'
-#        stack-name:
-#          get_param: 'OS::stack_name'
-#  magento_secondary:
-#    type: 'OS::Heat::ResourceGroup'
-#    properties:
-#      count:
-#        get_param: server_count
-#      resource_def:
-#        type:
-#          get_param: secondary_template
-#        properties:
-#          server_name:
-#            str_replace:
-#              params:
-#                domain:
-#                  get_param: magento_url
-#              template: 'web02.domain'
-#          #ansible_repo:
-#          #  get_param: ansible_repo
-#          ssh_key:
-#            get_resource: ssh_key
-#          magento_pass:
-#            get_attr:
-#              - magento_pass
-#              - value
-#          #ansible_branch:
-#          #  get_param: ansible_branch
-#          parent_stack_id:
-#            get_param: 'OS::stack_id'
-#          server_image:
-#            get_param: server_image
-#          server_flavor:
-#            get_param: server_flavor
-#          apache_default_domain:
-#            get_param: magento_url
-#          master_server:
-#            get_attr:
-#              - magento_server
-#              - networks
-#              - private
-#              - 0
